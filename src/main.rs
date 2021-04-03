@@ -23,8 +23,18 @@ struct Player {
     sprite: Rect,
     speed: i32,
     direction: Direction,
+    current_frame: i32,
 }
 
+fn get_direction_spritesheet_row(direction: Direction) -> i32 {
+    use self::Direction::*;
+    match direction {
+        Up => 3,
+        Down => 0,
+        Left => 1,
+        Right => 2,
+    }
+}
 fn render(
     canvas: &mut WindowCanvas,
     color: Color,
@@ -36,13 +46,17 @@ fn render(
 
     let (width, height) = canvas.output_size()?;
 
-    let screen_position = player.position + Point::new(width as i32 / 2, height as i32 / 2);
-    let screen_rect = Rect::from_center(
-        screen_position,
-        player.sprite.width(),
-        player.sprite.height(),
+    let (frame_width, frame_height) = player.sprite.size();
+    let current_frame = Rect::new(
+        player.sprite.x() + frame_width as i32 * player.current_frame,
+        player.sprite.y() + frame_height as i32 * get_direction_spritesheet_row(player.direction),
+        frame_width,
+        frame_height,
     );
-    canvas.copy(texture, player.sprite, screen_rect)?;
+
+    let screen_position = player.position + Point::new(width as i32 / 2, height as i32 / 2);
+    let screen_rect = Rect::from_center(screen_position, frame_width, frame_height);
+    canvas.copy(texture, current_frame, screen_rect)?;
 
     canvas.present();
 
@@ -56,6 +70,10 @@ fn update_player(player: &mut Player) {
         Right => player.position = player.position.offset(player.speed, 0),
         Up => player.position = player.position.offset(0, -player.speed),
         Down => player.position = player.position.offset(0, player.speed),
+    }
+
+    if player.speed != 0 {
+        player.current_frame = (player.current_frame + 1) % 3;
     }
 }
 fn main() -> Result<(), String> {
@@ -83,6 +101,7 @@ fn main() -> Result<(), String> {
         sprite: Rect::new(0, 0, 26, 36),
         speed: 0,
         direction: Direction::Right,
+        current_frame: 0,
     };
 
     let mut event_pump = sdl_context.event_pump()?;
@@ -157,9 +176,9 @@ fn main() -> Result<(), String> {
         i = (i + 1) % 255;
         update_player(&mut player);
 
-        render(&mut canvas, Color::RGB(i, 64, 255 - i), &texture, &player)?;
+        render(&mut canvas, Color::RGB(i, 125, 255 - i), &texture, &player)?;
 
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 24));
     }
 
     Ok(())
