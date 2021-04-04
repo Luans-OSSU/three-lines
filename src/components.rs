@@ -1,6 +1,6 @@
 use sdl2::rect::{Point, Rect};
 
-use specs::{Component, VecStorage};
+use specs::{Component, VecStorage, NullStorage};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
@@ -9,6 +9,10 @@ pub enum Direction {
     Left,
     Right,
 }
+
+#[derive(Component, Debug, Default)]
+#[storage(NullStorage)]
+pub struct KeyboardControlled;
 
 #[derive(Component, Debug)]
 #[storage(VecStorage)]

@@ -1,5 +1,6 @@
 mod animator;
 mod components;
+mod keyboard;
 mod physics;
 
 use sdl2::event::Event;
@@ -15,7 +16,10 @@ use std::time::Duration;
 
 use crate::components::*;
 
-const PLAYER_MOVEMENT_SPEED: i32 = 5;
+pub enum MovementCommand {
+    Stop,
+    Move(Direction),
+}
 
 fn get_spritesheet_row_from_direction(direction: Direction) -> i32 {
     use self::Direction::*;
@@ -102,12 +106,16 @@ fn main() -> Result<(), String> {
     let texture_creator = canvas.texture_creator();
 
     let mut dispatcher = DispatcherBuilder::new()
+        .with(keyboard::Keyboard, "Keyboard", &[])
         .with(physics::Physics, "Physics", &[])
         .with(animator::Animator, "Animator", &[])
         .build();
 
     let mut world = World::new();
     dispatcher.setup(&mut world);
+
+    let movement_command: Option<MovementCommand> = None;
+    world.insert(movement_command);
 
     let textures = [texture_creator.load_texture("assets/bardo.png")?];
 
@@ -139,6 +147,7 @@ fn main() -> Result<(), String> {
 
     world
         .create_entity()
+        .with(KeyboardControlled)
         .with(Position(Point::new(0, 0)))
         .with(Velocity {
             speed: 0,
@@ -152,6 +161,7 @@ fn main() -> Result<(), String> {
     let mut i = 0;
 
     'running: loop {
+        let mut movement_command = None;
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -166,29 +176,28 @@ fn main() -> Result<(), String> {
                     repeat: false,
                     ..
                 } => {
-                    player.speed = PLAYER_MOVEMENT_SPEED;
-                    player.direction = Direction::Left;
+                    movement_command = Some(MovementCommand::Move(Direction::Left));
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Right),
+                    repeat: false,
                     ..
                 } => {
-                    player.speed = PLAYER_MOVEMENT_SPEED;
-                    player.direction = Direction::Right;
+                    movement_command = Some(MovementCommand::Move(Direction::Right));
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Up),
+                    repeat: false,
                     ..
                 } => {
-                    player.speed = PLAYER_MOVEMENT_SPEED;
-                    player.direction = Direction::Up;
+                    movement_command = Some(MovementCommand::Move(Direction::Up));
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Down),
+                    repeat: false,
                     ..
                 } => {
-                    player.speed = PLAYER_MOVEMENT_SPEED;
-                    player.direction = Direction::Down;
+                    movement_command = Some(MovementCommand::Move(Direction::Down));
                 }
                 Event::KeyUp {
                     keycode: Some(Keycode::Left),
@@ -210,11 +219,13 @@ fn main() -> Result<(), String> {
                     repeat: false,
                     ..
                 } => {
-                    player.speed = 0;
+                    movement_command = Some(MovementCommand::Stop);
                 }
                 _ => {}
             }
         }
+
+        *world.write_resource() = movement_command;
 
         // Later we'll be used for update()
         i = (i + 1) % 255;
