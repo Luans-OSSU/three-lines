@@ -2,13 +2,13 @@ mod animator;
 mod components;
 mod keyboard;
 mod physics;
+mod renderer;
 
 use sdl2::event::Event;
 use sdl2::image::{self, InitFlag, LoadTexture};
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
-use sdl2::render::{Texture, WindowCanvas};
 
 use specs::{Builder, DispatcherBuilder, World, WorldExt};
 
@@ -55,35 +55,6 @@ fn create_character_animation_frames(
     }
 
     frames
-}
-
-fn render(
-    canvas: &mut WindowCanvas,
-    color: Color,
-    texture: &Texture,
-    player: &Player,
-) -> Result<(), String> {
-    canvas.set_draw_color(color);
-    canvas.clear();
-
-    let (width, height) = canvas.output_size()?;
-
-    let (frame_width, frame_height) = player.sprite.size();
-    let current_frame = Rect::new(
-        player.sprite.x() + frame_width as i32 * player.current_frame,
-        player.sprite.y()
-            + frame_height as i32 * get_spritesheet_row_from_direction(player.direction),
-        frame_width,
-        frame_height,
-    );
-
-    let screen_position = player.position + Point::new(width as i32 / 2, height as i32 / 2);
-    let screen_rect = Rect::from_center(screen_position, frame_width, frame_height);
-    canvas.copy(texture, current_frame, screen_rect)?;
-
-    canvas.present();
-
-    Ok(())
 }
 
 fn main() -> Result<(), String> {
@@ -233,7 +204,7 @@ fn main() -> Result<(), String> {
         dispatcher.dispatch(&mut world);
         world.maintain();
 
-        render(&mut canvas, Color::RGB(i, 125, 255 - i), &texture, &player)?;
+        renderer::render(&mut canvas, Color::RGB(i, 120, 255 - i), &textures, world.system_data())?;
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 24));
     }
