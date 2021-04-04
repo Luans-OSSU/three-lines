@@ -1,15 +1,18 @@
 [package]
-name = "three-lines-game"
-version = "0.1.0"
 authors = ["Daniil Merkulov"]
 edition = "2018"
+name = "three-lines-game"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dependencies]
+specs = {version = "0.16.1", features = ["specs-derive"]}
+
 [dependencies.sdl2]
-version = "0.34"
 default-features = false
-features = ["ttf","image","gfx","mixer","static-link","use-vcpkg"]
+features = ["ttf", "image", "gfx", "mixer", "static-link", "use-vcpkg"]
+version = "0.34"
 
 [package.metadata.vcpkg]
 dependencies = ["sdl2", "sdl2-image[libjpeg-turbo,tiff,libwebp]", "sdl2-ttf", "sdl2-gfx", "sdl2-mixer"]
@@ -17,4 +20,4 @@ git = "https://github.com/microsoft/vcpkg"
 rev = "a0518036077baa4"
 
 [package.metadata.vcpkg.target]
-x86_64-pc-windows-msvc = { triplet = "x64-windows-static-md" }
+x86_64-pc-windows-msvc = {triplet = "x64-windows-static-md"}
