@@ -9,7 +9,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::{Texture, WindowCanvas};
 
-use specs::{Builder, World, WorldExt};
+use specs::{Builder, DispatcherBuilder, World, WorldExt};
 
 use std::time::Duration;
 
@@ -100,6 +100,15 @@ fn main() -> Result<(), String> {
         .expect("could not make a canvas");
 
     let texture_creator = canvas.texture_creator();
+
+    let mut dispatcher = DispatcherBuilder::new()
+        .with(physics::Physics, "Physics", &[])
+        .with(animator::Animator, "Animator", &[])
+        .build();
+
+    let mut world = World::new();
+    dispatcher.setup(&mut world);
+
     let textures = [texture_creator.load_texture("assets/bardo.png")?];
 
     let player_spritesheet = 0;
@@ -127,8 +136,6 @@ fn main() -> Result<(), String> {
             Direction::Right,
         ),
     };
-
-    let mut world = World::new();
 
     world
         .create_entity()
@@ -211,6 +218,9 @@ fn main() -> Result<(), String> {
 
         // Later we'll be used for update()
         i = (i + 1) % 255;
+
+        dispatcher.dispatch(&mut world);
+        world.maintain();
 
         render(&mut canvas, Color::RGB(i, 125, 255 - i), &texture, &player)?;
 

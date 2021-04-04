@@ -2,7 +2,7 @@ use specs::{ReadStorage, System, WriteStorage};
 
 use crate::components::*;
 
-struct Animator;
+pub struct Animator;
 
 impl<'a> System<'a> for Animator {
     type SystemData = (
